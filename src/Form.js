@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import FormState from './FormState';
 
-import { getValueByKey, isObject, deepCompare } from './utils';
+import { getValueByKey, isObject } from './utils';
 
 export default class Form extends Component {
   static defaultProps = {
@@ -38,9 +38,10 @@ export default class Form extends Component {
   }
   componentWillReceiveProps(nextProps) {
     if (
-      !deepCompare(nextProps.rules, this.props.rules) ||
-      !deepCompare(nextProps.defaultErrors, this.props.defaultErrors) ||
-      !deepCompare(nextProps.defaultValue, this.props.defaultValue)
+      nextProps.reset ||
+      JSON.stringify(nextProps.rules) !== JSON.stringify(this.props.rules) ||
+      JSON.stringify(nextProps.defaultErrors) !== JSON.stringify(this.props.defaultErrors) ||
+      JSON.stringify(nextProps.defaultValue) !== JSON.stringify(this.props.defaultValue)
     ) {
       this.reset(nextProps);
     }
@@ -67,14 +68,11 @@ export default class Form extends Component {
     }
   }
   onSubmit = (event) => {
-    const { onSubmit, onError, reset } = this.props;
+    const { onSubmit, onError } = this.props;
     const { formState } = this.state;
     event.preventDefault();
     if (formState.isValid()) {
       onSubmit(formState.getResource(), () => this.reset(this.props));
-      if (reset) {
-        this.reset(this.props);
-      }
     } else {
       const errors = formState.getErrors();
       if (typeof onError === 'function') {
@@ -93,11 +91,7 @@ export default class Form extends Component {
         let value = typeof event === 'string' ? event : event.option;
         if (!value && event.target) {
           value = event.target.value;
-          if (
-            event.target &&
-            event.target.type === 'checkbox' &&
-            (event.target.value === '' || event.target.value === 'true')
-          ) {
+          if (event.target && (event.target.value === '' || event.target.value === 'true')) {
             value = event.target.checked;
           }
         }
