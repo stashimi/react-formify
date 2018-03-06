@@ -38,7 +38,6 @@ export default class Form extends Component {
   }
   componentWillReceiveProps(nextProps) {
     if (
-      nextProps.reset ||
       !deepCompare(nextProps.rules, this.props.rules) ||
       !deepCompare(nextProps.defaultErrors, this.props.defaultErrors) ||
       !deepCompare(nextProps.defaultValue, this.props.defaultValue)
@@ -68,11 +67,14 @@ export default class Form extends Component {
     }
   }
   onSubmit = (event) => {
-    const { onSubmit, onError } = this.props;
+    const { onSubmit, onError, reset } = this.props;
     const { formState } = this.state;
     event.preventDefault();
     if (formState.isValid()) {
       onSubmit(formState.getResource(), () => this.reset(this.props));
+      if (reset) {
+        this.reset(this.props);
+      }
     } else {
       const errors = formState.getErrors();
       if (typeof onError === 'function') {
